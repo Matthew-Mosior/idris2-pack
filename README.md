@@ -36,7 +36,7 @@ folder `$HOME/.local/bin` to your `$PATH` variable.
 ### Windows
 
 The following powershell script will download and install
-Chez Scheme (if not already installed) and set up pack and the corresponding
+Chez Scheme, as well as set up pack and the corresponding
 Idris2 compiler with
 
 ```
