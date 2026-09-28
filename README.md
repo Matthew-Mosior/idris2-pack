@@ -40,7 +40,7 @@ Chez Scheme (if it doesn't alreay exist on the user's system),
 as well as set up pack and the corresponding
 Idris2 compiler with
 
-```
+```powershell
 $installer = "$env:TEMP\install.ps1"
 Invoke-WebRequest `
     -Uri "https://raw.githubusercontent.com/stefan-hoeck/idris2-pack/main/install.ps1" `
@@ -50,7 +50,7 @@ Invoke-WebRequest `
 `
 ```
 
-This PowerShell installation script also works with a local Racket installation
+This installation script also works with a local Racket installation
 (any of the following `chezscheme`, `scheme`, `chez`, or `racket` will work).
 
 The Windows installer automatically adds
