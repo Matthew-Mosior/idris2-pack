@@ -35,8 +35,9 @@ folder `$HOME/.local/bin` to your `$PATH` variable.
 
 ### Windows
 
-The following powershell script will download and install
-Chez Scheme, as well as set up pack and the corresponding
+The following PowerShell script will download and install
+Chez Scheme (if it doesn't alreay exist on the user's system),
+as well as set up pack and the corresponding
 Idris2 compiler with
 
 ```
@@ -48,6 +49,9 @@ Invoke-WebRequest `
     `
 `
 ```
+
+This PowerShell installation script also works with a local Racket installation
+(any of the following `chezscheme`, `scheme`, `chez`, or `racket` will work).
 
 The Windows installer automatically adds
 `%USERPROFILE%\.local\bin` to the user's `PATH`.
