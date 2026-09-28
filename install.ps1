@@ -2,10 +2,6 @@
 #
 # Compatible with Windows PowerShell 5.1 and PowerShell 7+.
 # Designed to run from a normal, non-elevated user session.
-#
-# If execution policy blocks this .ps1 file, run the accompanying
-# install-pack-windows-final.cmd launcher instead. It applies Bypass only to
-# the child PowerShell process and does not change persistent policy.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
