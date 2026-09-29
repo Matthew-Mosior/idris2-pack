@@ -2,6 +2,10 @@
 #
 # Compatible with Windows PowerShell 5.1 and PowerShell 7+.
 # Designed to run from a normal, non-elevated user session.
+#
+# If execution policy blocks this .ps1 file, invoke it from a child
+# PowerShell process with `-ExecutionPolicy Bypass`. This applies only to that
+# process and does not change persistent user or machine policy.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
@@ -1113,9 +1117,9 @@ if (-not $PackPath) {
 #   /c <command>
 #
 # The proxy preserves the raw Windows command line, translates Idris2's
-# Windows/CMD-style escaping into Bash-compatible escaping, normalizes
-# Windows path separators, writes the translated command to a temporary
-# shell script, and executes that script with MSYS2 Bash.
+# Windows/CMD-style escaping into Bash-compatible escaping, normalizes Windows
+# path separators, writes the translated command to a temporary shell script,
+# and executes that script with MSYS2 Bash.
 #
 # Using a temporary script avoids the additional Windows -> Bash quoting
 # boundary that would be introduced by passing the command through
@@ -1185,7 +1189,7 @@ static const char *command_after_c(void) {
 /*
  * Idris2's System.escapeArg uses CMD escaping on Windows:
  *
- *   space -> ^
+ *   space -> ^ 
  *   &     -> ^&
  *   "     -> ^"
  *   etc.
@@ -1713,8 +1717,31 @@ $env:HOME = $HOME
 # ---------------------------------------------------------------------------
 # Final verification
 # ---------------------------------------------------------------------------
+#
+# Run verification outside the caller's working tree. A repository-local
+# pack.toml can override pack's configuration (for example with
+# `commit = "latest:main"`), which should not influence bootstrap verification.
+# Using a fresh temporary directory keeps this check limited to the installed
+# global/state configuration without modifying pack's source code.
+#
+$VerificationDir = Join-Path `
+    $env:TEMP `
+    ("idris2-pack-verify-" + [Guid]::NewGuid().ToString("N"))
 
-Invoke-Native $PackPath info
+New-Directory $VerificationDir
+
+Push-Location $VerificationDir
+try {
+    Invoke-Native $PackPath info
+}
+finally {
+    Pop-Location
+    Remove-Item `
+        -LiteralPath $VerificationDir `
+        -Recurse `
+        -Force `
+        -ErrorAction SilentlyContinue
+}
 
 Write-Host ""
 Write-Host "pack installation completed."
