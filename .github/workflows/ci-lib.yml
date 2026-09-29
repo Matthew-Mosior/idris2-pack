@@ -136,6 +136,7 @@ jobs:
           "$HOME\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install application
         shell: powershell
+        working-directory: ${{ runner.temp }}
         run: |
           pack --verbose install graph
       - name: Run examples
