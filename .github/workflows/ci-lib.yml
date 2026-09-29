@@ -139,11 +139,12 @@ jobs:
         run: |
           /home/runner/.local/bin/pack --verbose install graph
       - name: Run examples
+        shell: powershell
         run: |
-          cd example1
-          /home/runner/.local/bin/pack run chem-formula-example-test -n 1000
-          cd ../example2
-          /home/runner/.local/bin/pack run chem-smiles-example-test -n 1000
+          Set-Location example1
+          pack run chem-formula-example-test -n 1000
+          Set-Location ..\example2
+          pack run chem-smiles-example-test -n 1000
 
   shellscript-racket:
     name: Bootstrap with the shell script and racket
