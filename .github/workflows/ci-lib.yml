@@ -137,7 +137,7 @@ jobs:
       - name: Install application
         shell: powershell
         run: |
-          /home/runner/.local/bin/pack --verbose install graph
+          pack --verbose install graph
       - name: Run examples
         shell: powershell
         run: |
