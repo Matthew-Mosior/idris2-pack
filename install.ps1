@@ -1206,25 +1206,49 @@ static const char *command_after_c(void) {
  */
 
 /*
- * Return nonzero when the command ultimately launches the Idris2 compiler.
+ * Return nonzero when position `pos` is inside the value of one of pack's
+ * Idris2 path-list assignments:
  *
- * The Windows path-list compatibility rewrite must only be applied to native
- * Idris2 invocations. Custom package hooks can invoke MSYS2 Bash, make, gcc,
- * and other POSIX tools, and those commands must retain ':' path-list
- * semantics.
+ *   IDRIS2_PACKAGE_PATH=...
+ *   IDRIS2_LIBS=...
+ *   IDRIS2_DATA=...
+ *
+ * Pack serializes these lists with ':' separators. Native Windows Idris2
+ * expects ';'. We deliberately restrict the rewrite to these three variables
+ * so custom build hooks and unrelated environment variables retain their
+ * original POSIX semantics.
  */
-static int is_idris2_command(const char *src) {
-    return strstr(src, "/idris2 ") != NULL ||
-           strstr(src, "/idris2.exe ") != NULL ||
-           strstr(src, "\\idris2 ") != NULL ||
-           strstr(src, "\\idris2.exe ") != NULL ||
-           strstr(src, "/idris2\"") != NULL ||
-           strstr(src, "/idris2.exe\"") != NULL ||
-           strstr(src, "\\idris2\"") != NULL ||
-           strstr(src, "\\idris2.exe\"") != NULL;
+static int in_idris_path_assignment(const char *src, size_t pos) {
+    static const char *vars[] = {
+        "IDRIS2_PACKAGE_PATH=",
+        "IDRIS2_LIBS=",
+        "IDRIS2_DATA="
+    };
+
+    const char *p = src + pos;
+    const char *start = p;
+
+    while (start > src &&
+           start[-1] != ' ' &&
+           start[-1] != '\t' &&
+           start[-1] != '\n' &&
+           start[-1] != '\r') {
+        --start;
+    }
+
+    for (size_t i = 0; i < sizeof(vars) / sizeof(vars[0]); ++i) {
+        size_t len = strlen(vars[i]);
+
+        if (strncmp(start, vars[i], len) == 0 &&
+            (size_t)(p - start) >= len) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
-static char *cmd_to_bash(const char *src, int normalize_idris_paths) {
+static char *cmd_to_bash(const char *src) {
     size_t n = strlen(src);
     char *dst = (char *)malloc(n * 2 + 1);
     size_t i = 0;
@@ -1249,30 +1273,20 @@ static char *cmd_to_bash(const char *src, int normalize_idris_paths) {
         }
 
         /*
-         * For native Idris2 compiler invocations, pack prefixes commands
-         * with environment assignments such as:
+         * Only rewrite path-list separators inside the values of
+         * IDRIS2_PACKAGE_PATH, IDRIS2_LIBS, and IDRIS2_DATA.
          *
-         *   IDRIS2_PACKAGE_PATH=C:/one:C:/two
+         * The temporary script is interpreted by Bash, so emit an escaped
+         * semicolon. Bash consumes the backslash and passes the native Windows
+         * Idris2 process the required ';' separator:
          *
-         * Pack's DirList interpolation uses ':' as the path-list separator,
-         * while native Windows Idris2 expects ';'. For Idris2 commands only,
-         * replace the separator immediately before another drive prefix with
-         * an escaped semicolon:
-         *
-         *   C:/one:C:/two  ->  C:/one\;C:/two
-         *
-         * Bash consumes the backslash and passes the native Windows process:
-         *
-         *   C:/one;C:/two
-         *
-         * Custom hooks are deliberately excluded from this rewrite so MSYS2
-         * Bash, make, gcc, and similar tools retain POSIX ':' semantics.
+         *   C:/one:C:/two  ->  C:/one\;C:/two  ->  C:/one;C:/two
          */
-        if (normalize_idris_paths &&
-            src[i] == ':' &&
+        if (src[i] == ':' &&
             i + 2 < n &&
             isalpha((unsigned char)src[i + 1]) &&
-            src[i + 2] == ':') {
+            src[i + 2] == ':' &&
+            in_idris_path_assignment(src, i)) {
             dst[j++] = '\\';
             dst[j++] = ';';
             ++i;
@@ -1307,7 +1321,7 @@ int main(void) {
         return 2;
     }
 
-    command = cmd_to_bash(raw, is_idris2_command(raw));
+    command = cmd_to_bash(raw);
     if (command == NULL) {
         fprintf(stderr, "pack-comspec: unable to allocate command buffer\n");
         return 2;
