@@ -138,20 +138,6 @@ jobs:
         shell: powershell
         working-directory: ${{ runner.temp }}
         run: |
-          Write-Host "Installing algebra"
-          pack --verbose install algebra
-          Write-Host "Installed algebra tree"
-          Get-ChildItem `
-            "$HOME\.local\state\pack\install" `
-            -Recurse `
-            -Directory |
-            Where-Object { $_.FullName -match "algebra|idris2-0\.8\.0" } |
-            Select-Object -ExpandProperty FullName
-          Write-Host "pack package path"
-          pack package-path
-          Write-Host "Idris2 packages"
-          idris2 --list-packages
-          Write-Host "Installing graph"
           pack --verbose install graph
       - name: Run examples
         shell: powershell

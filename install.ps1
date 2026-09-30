@@ -1135,6 +1135,7 @@ $PackComspecExe = Join-Path $BinDir "pack-comspec.exe"
 $PackComspecSourceText = @'
 #include <windows.h>
 #include <process.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1189,7 +1190,7 @@ static const char *command_after_c(void) {
 /*
  * Idris2's System.escapeArg uses CMD escaping on Windows:
  *
- *   space -> ^
+ *   space -> ^ 
  *   &     -> ^&
  *   "     -> ^"
  *   etc.
@@ -1232,6 +1233,53 @@ static char *cmd_to_bash(const char *src) {
 
     dst[j] = '\0';
     return dst;
+}
+
+/*
+ * pack serializes Idris search-path variables using ':' separators, which is
+ * correct on Unix but ambiguous for native Windows paths:
+ *
+ *   C:/one:C:/two
+ *
+ * Native Windows tooling expects a ';'-separated path list:
+ *
+ *   C:/one;C:/two
+ *
+ * Replace only a colon that is immediately followed by another drive prefix
+ * (<letter>:). This preserves the colon in every individual drive prefix.
+ */
+static int normalize_windows_path_list(const char *name) {
+    const char *src = getenv(name);
+    char *dst;
+    size_t n;
+    size_t i;
+
+    if (src == NULL || *src == '\0') {
+        return 0;
+    }
+
+    n = strlen(src);
+    dst = _strdup(src);
+
+    if (dst == NULL) {
+        return -1;
+    }
+
+    for (i = 0; i + 2 < n; ++i) {
+        if (dst[i] == ':' &&
+            isalpha((unsigned char)dst[i + 1]) &&
+            dst[i + 2] == ':') {
+            dst[i] = ';';
+        }
+    }
+
+    if (_putenv_s(name, dst) != 0) {
+        free(dst);
+        return -1;
+    }
+
+    free(dst);
+    return 0;
 }
 
 int main(void) {
@@ -1302,6 +1350,20 @@ int main(void) {
             }
             ++p;
         }
+    }
+
+    /*
+     * sysWithEnvAndLog has already populated these variables in our inherited
+     * environment. Normalize their list separators before Bash launches the
+     * native Windows Idris2 process.
+     */
+    if (normalize_windows_path_list("IDRIS2_PACKAGE_PATH") != 0 ||
+        normalize_windows_path_list("IDRIS2_LIBS") != 0 ||
+        normalize_windows_path_list("IDRIS2_DATA") != 0) {
+        fprintf(stderr, "pack-comspec: unable to normalize Idris2 path variables\n");
+        free(script_arg);
+        DeleteFileA(temp_file);
+        return 2;
     }
 
     result =
@@ -1454,6 +1516,15 @@ for /f "delims=" %%i in ('"$PackPath" app-path idris2') do set "APPLICATION=%%i"
 for /f "delims=" %%i in ('"$PackPath" package-path') do set "IDRIS2_PACKAGE_PATH=%%i"
 for /f "delims=" %%i in ('"$PackPath" libs-path') do set "IDRIS2_LIBS=%%i"
 for /f "delims=" %%i in ('"$PackPath" data-path') do set "IDRIS2_DATA=%%i"
+
+rem pack emits Unix ':' path-list separators. On Windows, replace only
+rem separators that occur immediately before another drive-letter prefix.
+setlocal EnableDelayedExpansion
+for %%D in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+    set "IDRIS2_PACKAGE_PATH=!IDRIS2_PACKAGE_PATH::%%D:=;%%D:!"
+    set "IDRIS2_LIBS=!IDRIS2_LIBS::%%D:=;%%D:!"
+    set "IDRIS2_DATA=!IDRIS2_DATA::%%D:=;%%D:!"
+)
 
 set "IDRIS2_CG=$Cg"
 
