@@ -142,9 +142,20 @@ jobs:
       - name: Run examples
         shell: powershell
         run: |
-          Set-Location example1
+          $ExampleRoot = Join-Path $env:RUNNER_TEMP "idris2-pack-examples"
+          New-Item -ItemType Directory -Force -Path $ExampleRoot |
+            Out-Null
+          Copy-Item `
+            -Path ".\example1" `
+            -Destination "$ExampleRoot\example1" `
+            -Recurse
+          Copy-Item `
+            -Path ".\example2" `
+            -Destination "$ExampleRoot\example2" `
+            -Recurse
+          Set-Location "$ExampleRoot\example1"
           pack run chem-formula-example-test -n 1000
-          Set-Location ..\example2
+          Set-Location "$ExampleRoot\example2"
           pack run chem-smiles-example-test -n 1000
 
   shellscript-racket:

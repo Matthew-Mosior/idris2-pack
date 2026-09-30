@@ -1204,7 +1204,27 @@ static const char *command_after_c(void) {
  *   C:\Program^ Files\foo  -> C:/Program\ Files/foo
  *   foo^&bar               -> foo\&bar
  */
-static char *cmd_to_bash(const char *src) {
+
+/*
+ * Return nonzero when the command ultimately launches the Idris2 compiler.
+ *
+ * The Windows path-list compatibility rewrite must only be applied to native
+ * Idris2 invocations. Custom package hooks can invoke MSYS2 Bash, make, gcc,
+ * and other POSIX tools, and those commands must retain ':' path-list
+ * semantics.
+ */
+static int is_idris2_command(const char *src) {
+    return strstr(src, "/idris2 ") != NULL ||
+           strstr(src, "/idris2.exe ") != NULL ||
+           strstr(src, "\\idris2 ") != NULL ||
+           strstr(src, "\\idris2.exe ") != NULL ||
+           strstr(src, "/idris2\"") != NULL ||
+           strstr(src, "/idris2.exe\"") != NULL ||
+           strstr(src, "\\idris2\"") != NULL ||
+           strstr(src, "\\idris2.exe\"") != NULL;
+}
+
+static char *cmd_to_bash(const char *src, int normalize_idris_paths) {
     size_t n = strlen(src);
     char *dst = (char *)malloc(n * 2 + 1);
     size_t i = 0;
@@ -1229,19 +1249,27 @@ static char *cmd_to_bash(const char *src) {
         }
 
         /*
-         * Pack prefixes Idris commands with environment assignments such as:
+         * For native Idris2 compiler invocations, pack prefixes commands
+         * with environment assignments such as:
          *
-         *   IDRIS2_PACKAGE_PATH="C:/one:C:/two"
+         *   IDRIS2_PACKAGE_PATH=C:/one:C:/two
          *
-         * because its DirList interpolation uses ':' as the path-list
-         * separator. Native Windows Idris2 requires ';'. Replace only a colon
-         * that separates two drive-qualified paths, i.e. the ':' immediately
-         * before another "<letter>:" prefix. This preserves each drive's own
-         * colon:
+         * Pack's DirList interpolation uses ':' as the path-list separator,
+         * while native Windows Idris2 expects ';'. For Idris2 commands only,
+         * replace the separator immediately before another drive prefix with
+         * an escaped semicolon:
          *
-         *   C:/one:C:/two  ->  C:/one;C:/two
+         *   C:/one:C:/two  ->  C:/one\;C:/two
+         *
+         * Bash consumes the backslash and passes the native Windows process:
+         *
+         *   C:/one;C:/two
+         *
+         * Custom hooks are deliberately excluded from this rewrite so MSYS2
+         * Bash, make, gcc, and similar tools retain POSIX ':' semantics.
          */
-        if (src[i] == ':' &&
+        if (normalize_idris_paths &&
+            src[i] == ':' &&
             i + 2 < n &&
             isalpha((unsigned char)src[i + 1]) &&
             src[i + 2] == ':') {
@@ -1279,7 +1307,7 @@ int main(void) {
         return 2;
     }
 
-    command = cmd_to_bash(raw);
+    command = cmd_to_bash(raw, is_idris2_command(raw));
     if (command == NULL) {
         fprintf(stderr, "pack-comspec: unable to allocate command buffer\n");
         return 2;
