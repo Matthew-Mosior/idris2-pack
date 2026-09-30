@@ -1245,6 +1245,7 @@ static char *cmd_to_bash(const char *src) {
             i + 2 < n &&
             isalpha((unsigned char)src[i + 1]) &&
             src[i + 2] == ':') {
+            dst[j++] = '\\';
             dst[j++] = ';';
             ++i;
             continue;
@@ -1537,9 +1538,21 @@ fi
 
 APPLICATION="$("$PACK" app-path idris2)"
 
-export IDRIS2_PACKAGE_PATH="$("$PACK" package-path)"
-export IDRIS2_LIBS="$("$PACK" libs-path)"
-export IDRIS2_DATA="$("$PACK" data-path)"
+IDRIS2_PACKAGE_PATH="$("$PACK" package-path)"
+IDRIS2_LIBS="$("$PACK" libs-path)"
+IDRIS2_DATA="$("$PACK" data-path)"
+
+# pack emits ':' between directories. Native Windows Idris2 expects ';'.
+# Replace only separators immediately preceding another drive-letter prefix.
+for drive in {A..Z} {a..z}; do
+    IDRIS2_PACKAGE_PATH="${IDRIS2_PACKAGE_PATH//:${drive}:/;${drive}:}"
+    IDRIS2_LIBS="${IDRIS2_LIBS//:${drive}:/;${drive}:}"
+    IDRIS2_DATA="${IDRIS2_DATA//:${drive}:/;${drive}:}"
+done
+
+export IDRIS2_PACKAGE_PATH
+export IDRIS2_LIBS
+export IDRIS2_DATA
 export IDRIS2_CG="__IDRIS2_CG__"
 
 # pack is a native Windows executable, so app-path may return a Windows path
