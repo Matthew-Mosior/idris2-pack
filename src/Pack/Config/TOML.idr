@@ -190,11 +190,11 @@ initToml scheme = """
   # This can be a single string or a list of strings.
   # extra-args = []
 
-  [CI]
+  [CI/CD]
 
   # List of machine types to run the Check Collection
   # and pages build and deployment GitHub Actions
-  # CI/CD workflows against.
+  # CI/CD workflows (pack-db) against.
   # runs-on = [ "ubuntu", "macos" ]
 
   # Below are some examples for custom packages
