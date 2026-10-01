@@ -435,6 +435,36 @@ All : DBName
 All = MkDBName "all"
 
 --------------------------------------------------------------------------------
+--          CI/CD Machine Type
+--------------------------------------------------------------------------------
+
+||| Possible CI/CD machine types.
+public export
+data CICDMachineType = Ubuntu | MacOS
+
+cicdMachineTypeToNat : CICDMachineType -> Nat
+cicdMachineTypeToNat Ubuntu  = 0
+cicdMachineTypeToNat MacOS   = 1
+
+export
+Eq CICDMachineType where (==) = (==) `on` cicdMachineTypeToNat
+
+export
+Ord CICDMachineType where compare = compare `on` cicdMachineTypeToNat
+
+export
+Interpolation CICDMachineType where
+  interpolate Ubuntu = "ubuntu"
+  interpolate MacOS  = "macos"
+
+export
+cicdmachinetypes : List (String, CICDMachineType)
+cicdmachinetypes =
+  [ ("ubuntu", Ubuntu)
+  , ("macos" , MacOS )
+  ]
+
+--------------------------------------------------------------------------------
 --          Desc
 --------------------------------------------------------------------------------
 

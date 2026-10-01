@@ -51,6 +51,7 @@ microInit scheme db =
     , output            = "_tmppack"
     , levels            = empty
     , gitInit           = False
+    , runsOn            = [Ubuntu]
     }
 
 covering

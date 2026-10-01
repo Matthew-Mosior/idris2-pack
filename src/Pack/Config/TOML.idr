@@ -79,6 +79,7 @@ FromTOML UserConfig where
           (pure Nothing)
           (maybeValAt "log" f v)
           (maybeValAt "idris2.git" f v)
+          (maybeValAt "pack.runs-on" f v)
       |]
 
 ||| Initial content of an auto-generated `PACK_USER_DIR/pack.toml` file.
@@ -188,6 +189,13 @@ initToml scheme = """
   # Additional arguments to be passed to the Idris compiler
   # This can be a single string or a list of strings.
   # extra-args = []
+
+  [CI]
+
+  # List of machine types to run the Check Collection
+  # and pages build and deployment GitHub Actions
+  # CI/CD workflows against.
+  # runs-on = [ "ubuntu", "macos" ]
 
   # Below are some examples for custom packages
 
