@@ -190,7 +190,7 @@ initToml scheme = """
   # This can be a single string or a list of strings.
   # extra-args = []
 
-  [CI/CD]
+  [CICD]
 
   # List of machine types to run the Check Collection
   # and pages build and deployment GitHub Actions
