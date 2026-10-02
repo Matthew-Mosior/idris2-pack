@@ -288,16 +288,16 @@ isGit (Local {}) = No absurd
 ||| folders where Idris package are installed.
 export
 usePackagePath : Package_ I c -> Bool
-usePackagePath (Git _ _ _ pp _ _) = pp
-usePackagePath (Local _ _ pp _) = pp
-usePackagePath (Core _)         = False
+usePackagePath (Git _ _ _ pp _ _ _) = pp
+usePackagePath (Local _ _ pp _)     = pp
+usePackagePath (Core _)             = False
 
 ||| Absolute path to the `.ipkg` file of a package.
 export
 ipkg : (dir : Path Abs) -> Package -> File Abs
-ipkg dir (Git _ _ i _ _ _) = toAbsFile dir i
-ipkg dir (Local _ i _ _) = toAbsFile dir i
-ipkg dir (Core c)        = toAbsFile dir (coreIpkgPath c)
+ipkg dir (Git _ _ i _ _ _ _) = toAbsFile dir i
+ipkg dir (Local _ i _ _)     = toAbsFile dir i
+ipkg dir (Core c)            = toAbsFile dir (coreIpkgPath c)
 
 --------------------------------------------------------------------------------
 --          Resolved Packages
@@ -499,6 +499,16 @@ testPath = map (\x => "test        = \{quote x}")
 notice : Maybe String -> Maybe String
 notice = map (\x =>   "notice      = \{quote x}")
 
+machinetype : MachineType -> String
+machinetype Ubuntu = "ubuntu"
+machinetype MacOS  = "macos"
+
+runsOn : Maybe (List MachineType) -> Maybe String
+runsOn = map $ \xs =>
+  "runs-on     = [" ++
+  concat (intersperse ", " $ map (quote . machinetype) xs) ++
+  "]"
+
 -- we need to print `Git` packages as `"github"` at
 -- least for the time being for reasons of compatibility
 printPair : (PkgName,Package) -> List String
@@ -509,8 +519,7 @@ printPair (x, Git url commit ipkg pp t n ro) =
   , "commit      = \{quote commit}"
   , "ipkg        = \{quote ipkg}"
   , "packagePath = \{tomlBool pp}"
-  , "runsOn      = \{quote ro}"
-  ] ++ (catMaybes [testPath t, notice n])
+  ] ++ (catMaybes [testPath t, notice n, runsOn ro])
 
 printPair (x, Local dir ipkg pp t) =
   [ "[db.\{x}]"

@@ -152,15 +152,25 @@ testFile = map (\f => "Test File    : \{f}")
 notice : Maybe String -> Maybe String
 notice = map (\f =>   "Notice       : \{f}")
 
+machinetype : MachineType -> String
+machinetype Ubuntu = "ubuntu"
+machinetype MacOS  = "macos"
+
+runsOn : Maybe (List MachineType) -> Maybe String
+runsOn = map $ \xs =>
+  "runs-on     = [" ++
+  concat (intersperse ", " $ map (quote . machinetype) xs) ++
+  "]"
+
 details : Hash -> QPkg -> List String
 details hash qp = case qp.lib.pkg of
-  Git url commit ipkg _ t n => [
+  Git url commit ipkg _ t n ro => [
     "Type         : Git project"
   , "URL          : \{url}"
   , "Commit       : \{commit}"
   , "Install hash : \{hash}"
   , "ipkg File    : \{ipkg}"
-  ] ++ (catMaybes [testFile t, notice n])
+  ] ++ (catMaybes [testFile t, notice n, runsOn ro])
 
   Local d i _ t =>
     let ipkg := toAbsFile d i
