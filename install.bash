@@ -346,13 +346,6 @@ if [ ! -f "$USER_DIR/pack.toml" ]; then
 		# This can be a single string or a list of strings.
 		# extra-args = []
 
-		[CICD]
-
-		# List of machine types to run the Check Collection
-		# and pages build and deployment GitHub Actions
-		# CI/CD workflows (pack-db) against.
-		# runs-on = [ "ubuntu", "macos" ]
-
 		# Below are some examples for custom packages
 
 		# A local package to be available with all
