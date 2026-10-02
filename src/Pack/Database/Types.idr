@@ -191,13 +191,13 @@ data Package_ : (f : Type -> Type) -> (c : Type) -> Type where
 
 export
 Functor (Package_ I) where
-  map f (Git u c i p t n) = Git u (f c) i p t n r
+  map f (Git u c i p t n ro) = Git u (f c) i p t n ro
   map f (Local d i p t) = Local d i p t
   map f (Core c)        = Core c
 
 export
 traverse : Applicative f => (URL -> a -> f b) -> Package_ I a -> f (Package_ I b)
-traverse g (Git u c i p t n r) = (\c' => Git u c' i p t n r) <$> g u c
+traverse g (Git u c i p t n ro) = (\c' => Git u c' i p t n ro) <$> g u c
 traverse _ (Local d i p t)    = pure $ Local d i p t
 traverse _ (Core c)           = pure $ Core c
 
@@ -543,8 +543,8 @@ printDB (MkDB u c v db) =
 
 export
 mergeUP : UserPackage -> UserPackage -> UserPackage
-mergeUP (Git u1 c1 i1 p1 t1 n1) (Git u2 c2 i2 p2 t2 n2) =
-  Git (u1<|>u2)(c1<|>c2)(i1<|>i2)(p1<|>p2)(t1<|>t2)(n1<|>n2)
+mergeUP (Git u1 c1 i1 p1 t1 n1 ro1) (Git u2 c2 i2 p2 t2 n2 ro2) =
+  Git (u1<|>u2)(c1<|>c2)(i1<|>i2)(p1<|>p2)(t1<|>t2)(n1<|>n2)(ro1<|>ro2)
 mergeUP _ y = y
 
 --------------------------------------------------------------------------------
