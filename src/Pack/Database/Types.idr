@@ -499,10 +499,6 @@ testPath = map (\x => "test        = \{quote x}")
 notice : Maybe String -> Maybe String
 notice = map (\x =>   "notice      = \{quote x}")
 
-machinetype : MachineType -> String
-machinetype Ubuntu = "ubuntu"
-machinetype MacOS  = "macos"
-
 runsOn : Maybe (List MachineType) -> Maybe String
 runsOn = map $ \xs =>
   "runs-on     = [" ++

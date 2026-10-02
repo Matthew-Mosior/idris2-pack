@@ -464,6 +464,11 @@ machinetypes =
   , ("macos" , MacOS )
   ]
 
+export
+machinetype : MachineType -> String
+machinetype Ubuntu = "ubuntu"
+machinetype MacOS  = "macos"
+
 --------------------------------------------------------------------------------
 --          Desc
 --------------------------------------------------------------------------------

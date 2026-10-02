@@ -152,10 +152,6 @@ testFile = map (\f => "Test File    : \{f}")
 notice : Maybe String -> Maybe String
 notice = map (\f =>   "Notice       : \{f}")
 
-machinetype : MachineType -> String
-machinetype Ubuntu = "ubuntu"
-machinetype MacOS  = "macos"
-
 runsOn : Maybe (List MachineType) -> Maybe String
 runsOn = map $ \xs =>
   "runs-on     = [" ++
