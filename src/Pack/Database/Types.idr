@@ -172,6 +172,7 @@ data Package_ : (f : Type -> Type) -> (c : Type) -> Type where
       -> (pkgPath  : f $ Bool)
       -> (testIpkg : Maybe (File Rel))
       -> (notice   : Maybe String)
+      -> (runsOn   : Maybe (List MachineType))
       -> Package_ f c
 
   ||| A local Idris project given as an absolute path to a local
@@ -190,13 +191,13 @@ data Package_ : (f : Type -> Type) -> (c : Type) -> Type where
 
 export
 Functor (Package_ I) where
-  map f (Git u c i p t n) = Git u (f c) i p t n
+  map f (Git u c i p t n) = Git u (f c) i p t n r
   map f (Local d i p t) = Local d i p t
   map f (Core c)        = Core c
 
 export
 traverse : Applicative f => (URL -> a -> f b) -> Package_ I a -> f (Package_ I b)
-traverse g (Git u c i p t n) = (\c' => Git u c' i p t n) <$> g u c
+traverse g (Git u c i p t n r) = (\c' => Git u c' i p t n r) <$> g u c
 traverse _ (Local d i p t)    = pure $ Local d i p t
 traverse _ (Core c)           = pure $ Core c
 
@@ -501,13 +502,14 @@ notice = map (\x =>   "notice      = \{quote x}")
 -- we need to print `Git` packages as `"github"` at
 -- least for the time being for reasons of compatibility
 printPair : (PkgName,Package) -> List String
-printPair (x, Git url commit ipkg pp t n) =
+printPair (x, Git url commit ipkg pp t n ro) =
   [ "[db.\{x}]"
   , "type        = \"github\""
   , "url         = \{quote url}"
   , "commit      = \{quote commit}"
   , "ipkg        = \{quote ipkg}"
   , "packagePath = \{tomlBool pp}"
+  , "runsOn      = \{quote ro}"
   ] ++ (catMaybes [testPath t, notice n])
 
 printPair (x, Local dir ipkg pp t) =

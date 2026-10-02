@@ -435,31 +435,31 @@ All : DBName
 All = MkDBName "all"
 
 --------------------------------------------------------------------------------
---          CI/CD Machine Type
+--          Machine Type
 --------------------------------------------------------------------------------
 
-||| Possible CI/CD machine types.
+||| Possible compatible machine types (for installation and CI/CD).
 public export
-data CICDMachineType = Ubuntu | MacOS
+data MachineType = Ubuntu | MacOS
 
-cicdMachineTypeToNat : CICDMachineType -> Nat
-cicdMachineTypeToNat Ubuntu  = 0
-cicdMachineTypeToNat MacOS   = 1
-
-export
-Eq CICDMachineType where (==) = (==) `on` cicdMachineTypeToNat
+machineTypeToNat : MachineType -> Nat
+machineTypeToNat Ubuntu  = 0
+machineTypeToNat MacOS   = 1
 
 export
-Ord CICDMachineType where compare = compare `on` cicdMachineTypeToNat
+Eq MachineType where (==) = (==) `on` machineTypeToNat
 
 export
-Interpolation CICDMachineType where
+Ord MachineType where compare = compare `on` machineTypeToNat
+
+export
+Interpolation MachineType where
   interpolate Ubuntu = "ubuntu"
   interpolate MacOS  = "macos"
 
 export
-cicdmachinetypes : List (String, CICDMachineType)
-cicdmachinetypes =
+machinetypes : List (String, MachineType)
+machinetypes =
   [ ("ubuntu", Ubuntu)
   , ("macos" , MacOS )
   ]
@@ -757,6 +757,10 @@ data PackErr : Type where
   ||| The given package is not a local package
   NotLocalPkg : (name : PkgName) -> PackErr
 
+  ||| The given package is trying to be installed on
+  ||| an incompatible machine type.
+  InstallOnIncompatibleMachinePkg : (mt : MachineType) -> (name : PkgName) -> PackErr
+
   ||| The given package is not an applicatio
   ||| (No executable name set in the `.ipkg` file)
   NoApp      : (rep : PkgName) -> PackErr
@@ -919,6 +923,11 @@ printErr (UnknownPkg name) = "Unknown package: \{name}"
 printErr (IncompletePkg name) = "Incomplete data for custom package: \{name}"
 
 printErr (NotLocalPkg name) = "Not a local package: \{name}"
+
+printErr (InstallOnIncompatibleMachinePkg mt name) = """
+  Trying to install the following package on
+  an incompatible machine type (\{mt}): \{name}
+  """
 
 printErr (NoApp rep) = "Package \{rep} is not an application"
 

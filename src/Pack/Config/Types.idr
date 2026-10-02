@@ -254,11 +254,6 @@ record Config_ (f : Type -> Type) (c : Type) where
   ||| Whether to initialize git.
   gitInit      : f Bool
 
-  ||| Which type of machine(s) to build a given package
-  ||| against (GitHub Actions) in the
-  ||| idris2-pack-db repo.
-  runsOn       : f (List CICDMachineType)
-
 ||| Configuration with mandatory fields.
 public export
 0 IConfig : Type -> Type
@@ -367,7 +362,6 @@ init coll = MkConfig {
   , output          = "_tmppack"
   , levels          = empty
   , gitInit         = False
-  , runsOn          = [Ubuntu]
   }
 
 export infixl 7 `update`
@@ -408,7 +402,6 @@ update ci cm =
   , output          = fromMaybe ci.output cm.output
   , levels          = mergeWith (\_,v => v) ci.levels (fromMaybe empty cm.levels)
   , gitInit         = fromMaybe ci.gitInit cm.gitInit
-  , runsOn          = fromMaybe ci.runsOn cm.runsOn
   }
 
 --------------------------------------------------------------------------------

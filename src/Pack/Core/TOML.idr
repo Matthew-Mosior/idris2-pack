@@ -231,13 +231,13 @@ export
 FromTOML (File Abs) where
   fromTOML f v = toAbsFile f.parent <$> fromTOML f v
 
-toCICDMachineType : String -> Either TOMLErr CICDMachineType
-toCICDMachineType s = case lookup s cicdmachinetypes of
+toMachineType : String -> Either TOMLErr MachineType
+toMachineType s = case lookup s machinetypes of
   Just mt => Right mt
-  Nothing => Left (WrongType [] "ci/cd machine type")
+  Nothing => Left (WrongType [] "machine type")
 
 export
-FromTOML CICDMachineType where fromTOML = trefine toCICDMachineType
+FromTOML MachineType where fromTOML = trefine toMachineType
 
 --------------------------------------------------------------------------------
 --          Reading a TOML File
