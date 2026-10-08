@@ -258,7 +258,7 @@ verifyInstallationPlatform mts =
            ) mts
       )
 
-||| Mapping from OS to platform
+||| Mapping from OS to platform.
 toPlatform : String -> MachineType
 toPlatform "unix" = Ubuntu
 toPlatform _      = MacOS
