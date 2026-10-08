@@ -155,7 +155,7 @@ notice = map (\f =>   "Notice       : \{f}")
 runsOn : Maybe (List MachineType) -> Maybe String
 runsOn = map $ \xs =>
   "runs-on     = [" ++
-  concat (intersperse ", " $ map (quote . machinetype) xs) ++
+  concat (intersperse ", " $ map quote xs) ++
   "]"
 
 details : Hash -> QPkg -> List String

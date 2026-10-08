@@ -442,32 +442,16 @@ All = MkDBName "all"
 public export
 data MachineType = Ubuntu | MacOS
 
+%runElab derive "MachineType" [Eq,Ord]
+
 machineTypeToNat : MachineType -> Nat
 machineTypeToNat Ubuntu  = 0
 machineTypeToNat MacOS   = 1
 
 export
-Eq MachineType where (==) = (==) `on` machineTypeToNat
-
-export
-Ord MachineType where compare = compare `on` machineTypeToNat
-
-export
 Interpolation MachineType where
   interpolate Ubuntu = "ubuntu"
   interpolate MacOS  = "macos"
-
-export
-machinetypes : List (String, MachineType)
-machinetypes =
-  [ ("ubuntu", Ubuntu)
-  , ("macos" , MacOS )
-  ]
-
-export
-machinetype : MachineType -> String
-machinetype Ubuntu = "ubuntu"
-machinetype MacOS  = "macos"
 
 --------------------------------------------------------------------------------
 --          Desc

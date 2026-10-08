@@ -232,9 +232,9 @@ FromTOML (File Abs) where
   fromTOML f v = toAbsFile f.parent <$> fromTOML f v
 
 toMachineType : String -> Either TOMLErr MachineType
-toMachineType s = case lookup s machinetypes of
-  Just mt => Right mt
-  Nothing => Left (WrongType [] "machine type")
+toMachineType "ubuntu" = Right Ubuntu
+toMachineType "macos"  = Right MacOS
+toMachineType _        = Left (WrongType [] "machine type")
 
 export
 FromTOML MachineType where fromTOML = trefine toMachineType

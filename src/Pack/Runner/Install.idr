@@ -243,6 +243,26 @@ libPkg env lvl cleanBuild cmd desc =
 
      inDir (desc.path.parent) (\_ => sysWithEnvAndLog lvl s pre)
 
+||| Check whether the current platform
+||| is one of the supported installation
+||| platforms.
+verifyInstallationPlatform :
+     List MachineType
+  -> Bool
+verifyInstallationPlatform mts =
+  any (== os)
+      (map (\mt =>
+             case mt of
+               Ubuntu => "unix"
+               _      => "darwin"
+           ) mts
+      )
+
+||| Mapping from OS to platform
+toPlatform : String -> MachineType
+toPlatform "unix" = Ubuntu
+toPlatform _      = MacOS
+
 --------------------------------------------------------------------------------
 --          Installing Idris
 --------------------------------------------------------------------------------
@@ -377,18 +397,10 @@ preInstall rl = withPkgEnv rl.name rl.pkg $ \dir =>
               let cache := ipkgCachePath rl.name c ipkg
               copyFile cache ipkgAbs
             Just ro' =>
-              case any (== os) (map (\cro =>
-                                       case cro of
-                                          Ubuntu => "unix"
-                                          _      => "darwin"
-                                    ) ro'
-                               ) of
+              case verifyInstallationPlatform ro' of
                 False =>
-                  throwE ( InstallOnIncompatibleMachinePkg ( case os of
-                                                               "unix" => Ubuntu
-                                                               _      => MacOS
-                                                           )
-                                                           rl.name
+                  throwE (InstallOnIncompatibleMachinePkg (toPlatform os)
+                                                          rl.name
                          )
                 True => do
                   let cache := ipkgCachePath rl.name c ipkg
@@ -456,18 +468,10 @@ installApp b ra =
                   copyApp ra
                   when b $ appLink ra.exec ra.name pp cg
                 Just ro' =>
-                  case any (== os) (map (\cro =>
-                                           case cro of
-                                              Ubuntu => "unix"
-                                              _      => "darwin"
-                                        ) ro'
-                                   ) of
+                  case verifyInstallationPlatform ro' of
                     False =>
-                      throwE ( InstallOnIncompatibleMachinePkg ( case os of
-                                                                   "unix" => Ubuntu
-                                                                   _      => MacOS
-                                                               )
-                                                               ra.name
+                      throwE (InstallOnIncompatibleMachinePkg (toPlatform os)
+                                                              ra.name
                              )
                     True => do
                       let cache   := ipkgCachePath ra.name c ipkg

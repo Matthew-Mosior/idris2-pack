@@ -502,7 +502,7 @@ notice = map (\x =>   "notice      = \{quote x}")
 runsOn : Maybe (List MachineType) -> Maybe String
 runsOn = map $ \xs =>
   "runs-on     = [" ++
-  concat (intersperse ", " $ map (quote . machinetype) xs) ++
+  concat (intersperse ", " $ map quote xs) ++
   "]"
 
 -- we need to print `Git` packages as `"github"` at
